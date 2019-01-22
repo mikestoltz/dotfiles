@@ -1,0 +1,109 @@
+" ---------------------
+" Environment
+" ---------------------
+" Don't care about vi compatibility
+set nocompatible
+" Turn off autodetect
+filetype off
+" Line number, displacement in status bar
+set ruler
+
+" ---------------------
+" Plug
+" ---------------------
+" Setting up Plug - A minimalist Vim plugin manager
+if empty(glob('~/.vim/autoload/plug.vim'))
+  silent !curl -sfLo ~/.vim/autoload/plug.vim --create-dirs
+        \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  autocmd VimEnter * PlugInstall | source ~/.vimrc
+endif
+
+call plug#begin('~/.vim/plugged')
+
+Plug 'altercation/vim-colors-solarized'       " solarized color scheme
+Plug 'bogado/file-line'                       " Open to line num using <filename>:<linenumber>
+Plug 'chrisbra/vim-diff-enhanced'             " Git diffs in vim
+Plug 'christoomey/vim-tmux-navigator'         " Seamless vim and tmux
+Plug 'ctrlpvim/ctrlp.vim'                     " Fuzzy file, etc finder
+Plug 'godlygeek/tabular'                      " Align stuff nicely
+Plug 'kern/vim-es7'                           " ES6 + ES7 syntax
+Plug 'nathanaelkane/vim-indent-guides'        " Indentation guides
+Plug 'othree/javascript-libraries-syntax.vim' " Syntax highlighting for js libs
+Plug 'tpope/vim-sleuth'                       " Auto shiftwidth and expandtab based on file contents
+Plug 'vim-airline/vim-airline'                " Status / tabline
+Plug 'vim-airline/vim-airline-themes'         " Themes for airline
+Plug 'ekalinin/Dockerfile.vim'                " Syntax for Dockerfiles
+
+call plug#end()
+
+" fuck auto comments
+set formatoptions=cro
+
+" ---------------------
+" Whitespace
+" ---------------------
+
+" Expand all tabs to spaces
+set expandtab
+" Set tab width
+set tabstop=4 " number of visual spaces per tab
+set softtabstop=4 " number of spaces in tab when editing
+" Expand all existing tab characters to spaces
+retab
+" Set number of spaces for indentation
+set shiftwidth=4
+" Remove trailing whitespace on write
+autocmd BufWritePre * :%s/\s\+$//e
+" Highlight trailing whitespace and tabs
+highlight link RedundantSpaces Error
+au BufEnter,BufRead * match RedundantSpaces "\t"
+au BufEnter,BufRead * match RedundantSpaces "[[:space:]]\+$"
+
+
+" ---------------------
+" KEY MAPPINGS
+" ---------------------
+" disable arrow keys to force hjkl movement
+inoremap  <Down>   <NOP>
+inoremap  <Left>   <NOP>
+inoremap  <Right>  <NOP>
+noremap   <Up>     <NOP>
+noremap   <Down>   <NOP>
+noremap   <Left>   <NOP>
+noremap   <Right>  <NOP>
+
+" Set paste keys
+nmap <C-v> :set paste<CR>:r !pbpaste<CR>:set nopaste<CR>
+imap <C-v> <Esc>:set paste<CR>:r !pbpaste<CR>:set nopaste<CR>
+vmap <C-c> :.w !pbcopy<CR><CR>
+nmap <C-c> :.w !pbcopy<CR><CR>
+
+" change insert to ii
+imap ii <Esc>
+
+
+
+" ---------------------
+" SYNTAX HIGHLIGHTING
+" ---------------------
+if has("syntax")
+    syntax enable
+endif
+
+
+" Set JavaScript Template file syntax highlighting to HTML format
+au BufNewFile,BufRead *.ejs set filetype=html
+" custom formatting for proto files
+autocmd FileType proto setlocal shiftwidth=2 tabstop=2
+" Show matching brackets
+set showmatch
+
+
+" Rest of Norm's shit
+set viminfo='20,<10000,s10000
+set backspace=2
+set noerrorbells
+set novisualbell
+set background=dark
+set t_vb=
+set tm=500

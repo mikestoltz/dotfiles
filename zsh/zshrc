@@ -1,0 +1,213 @@
+ZSH_THEME="agnoster"
+
+setopt inc_append_history
+setopt append_history
+setopt hist_ignore_dups
+setopt hist_ignore_all_dups
+setopt extended_history
+setopt autocontinue
+setopt autocd
+setopt extendedglob
+setopt notify
+setopt complete_in_word
+setopt prompt_subst
+unsetopt beep
+
+zstyle ':completion:*:killall:*' command 'ps -u $USER -o cmd'
+autoload -U compinit; compinit
+bindkey -v
+bindkey 'ii' vi-cmd-mode
+bindkey -M vicmd '?' history-incremental-pattern-search-backward
+bindkey "^?" backward-delete-char
+
+bindkey -r '^[OA' '^[OB' '^[OC' '^[OD' '^[[A' '^[[B' '^[[C' '^[[D'
+bindkey -a -r '^[OA' '^[OB' '^[OC' '^[OD' '^[[A' '^[[B' '^[[C' '^[[D'
+
+# history settings
+REPORTTIME=10
+HISTFILE=~/.zsh_history
+HISTSIZE=100000
+SAVEHIST=100000
+
+# add some colors dawg
+autoload -U colors && colors
+
+# default editors
+export EDITOR='vim'
+export VISUAL='vim'
+
+# start tmux
+if [[ ! $TERM =~ screen ]]; then
+    tmux attach -t 0 || tmux
+fi
+
+# add yarn executable to path
+export PATH="$HOME/.yarn/bin:$PATH"
+
+# Norm's JWT Parser
+function jwt() {
+  while [ ! $# -eq 0 ]
+    do
+      case "$1" in
+        --decode | -D)
+          echo $2 | base64 --decode | jq .
+          ;;
+        --help | -h)
+          cat <<EOF
+Usage: jwt COMMAND
+
+A command-line JWT encoder / decoder
+
+Options:
+  -D, --decode          Decode a JWT
+EOF
+          ;;
+      esac
+      shift
+  done
+}
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/mike/google-cloud-sdk/path.zsh.inc' ]; then source '/Users/mike/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/mike/google-cloud-sdk/completion.zsh.inc' ]; then source '/Users/mike/google-cloud-sdk/completion.zsh.inc'; fi
+
+# gpg agent stuff
+export GPG_TTY=`tty`
+
+if [ -f ~/.gnupg/.gpg-agent-info ] && [ -n "$(pgrep gpg-agent)" ]; then
+    source ~/.gnupg/.gpg-agent-info
+    export GPG_AGENT_INFO
+else
+    eval $(gpg-agent --daemon --write-env-file ~/.gnupg/.gpg-agent-info)
+fi
+
+export PATH="/usr/local/opt/gpg-agent/bin:$PATH"
+
+# ---------------------------
+# fzf
+# ---------------------------
+# must come after prezto
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+bindkey -M vicmd '?' fzf-history-widget
+export FZF_TMUX=1
+export FZF_TMUX_HEIGHT=50%
+
+
+# THEME - based on https://gist.github.com/agnoster/3712874
+# segment drawing
+# A few utility functions to make it easy and re-usable to draw segmented prompts
+
+CURRENT_BG='NONE'
+PRIMARY_FG=black
+
+# Characters
+SEGMENT_SEPARATOR="\ue0b0"
+PLUSMINUS="\u00b1"
+BRANCH="\ue0a0"
+DETACHED="\u27a6"
+CROSS="\u2718"
+LIGHTNING="\u26a1"
+GEAR="\u2699"
+
+# Begin a segment
+# Takes two arguments, background and foreground. Both can be omitted,
+# rendering default background/foreground.
+prompt_segment() {
+  local bg fg
+  [[ -n $1 ]] && bg="%K{$1}" || bg="%k"
+  [[ -n $2 ]] && fg="%F{$2}" || fg="%f"
+  if [[ $CURRENT_BG != 'NONE' && $1 != $CURRENT_BG ]]; then
+    print -n "%{$bg%F{$CURRENT_BG}%}$SEGMENT_SEPARATOR%{$fg%}"
+  else
+    print -n "%{$bg%}%{$fg%}"
+  fi
+  CURRENT_BG=$1
+  [[ -n $3 ]] && print -n $3
+}
+
+# End the prompt, closing any open segments
+prompt_end() {
+  if [[ -n $CURRENT_BG ]]; then
+    print -n "%{%k%F{$CURRENT_BG}%}$SEGMENT_SEPARATOR"
+  else
+    print -n "%{%k%}"
+  fi
+  print -n "%{%f%}"
+  CURRENT_BG=''
+}
+
+### Prompt components
+# Each component will draw itself, and hide itself if no information needs to be shown
+
+# Git: branch/detached head, dirty status
+prompt_git() {
+  local color ref
+  is_dirty() {
+    test -n "$(git status --porcelain --ignore-submodules)"
+  }
+  ref="$vcs_info_msg_0_"
+  if [[ -n "$ref" ]]; then
+    # set dir to just current dir
+    prompt_segment blue $PRIMARY_FG " $(basename $(pwd))"
+
+    if is_dirty; then
+      color=yellow
+      ref="${ref} $PLUSMINUS"
+    else
+      color=green
+      ref="${ref} "
+    fi
+
+    if [[ "${ref/.../}" == "$ref" ]]; then
+      ref="$BRANCH $ref"
+    else
+      ref="$DETACHED ${ref/.../}"
+    fi
+
+    prompt_segment $color $PRIMARY_FG
+    print -Pn " $ref"
+  else
+    # set dir to whole path
+    prompt_segment blue $PRIMARY_FG ' %~ '
+  fi
+}
+
+## Main prompt
+prompt_agnoster_main() {
+  RETVAL=$?
+  CURRENT_BG='NONE'
+  prompt_git
+  prompt_end
+}
+
+prompt_agnoster_precmd() {
+  vcs_info
+  PROMPT='%{%f%b%k%}$(prompt_agnoster_main) '
+}
+
+prompt_agnoster_setup() {
+  autoload -Uz add-zsh-hook
+  autoload -Uz vcs_info
+
+  prompt_opts=(cr subst percent)
+
+  add-zsh-hook precmd prompt_agnoster_precmd
+
+  zstyle ':vcs_info:*' enable git
+  zstyle ':vcs_info:*' check-for-changes false
+  zstyle ':vcs_info:git*' formats '%b'
+  zstyle ':vcs_info:git*' actionformats '%b (%a)'
+}
+
+prompt_agnoster_setup "$@"
+# END THEME
+
+function grip() {
+    docker run -it -p 10000:10000 -v $(pwd):/data -v ~/.grip:/.grip mbentley/grip $@ 0.0.0.0:10000
+}
+
+# Add secret ENV Vars
+if [ -f '/Users/mike/.myenv' ]; then source '/Users/mike/.myenv'; fi
