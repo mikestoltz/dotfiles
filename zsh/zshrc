@@ -201,8 +201,9 @@ function grip() {
 if [ -f '~/.myenv' ]; then source '~/.myenv'; fi
 
 # GO PATH
-export GOPATH=$(go env GOPATH)
-export PATH=$PATH:$(go env GOPATH)/bin
+export GOPATH="$HOME/go"
+export GOBIN="$GOPATH/bin"
+export PATH="$PATH:$GOBIN"
 
 # linkerd2
 export PATH=$PATH:$HOME/.linkerd2/bin
@@ -216,5 +217,4 @@ alias k='kubectl'
 alias kns='kubens'
 
 # gpg agent
-source ~/.gpg-profile
 if [ -f '~/.gpg-profile' ]; then source '~/.gpg-profile'; fi
