@@ -73,18 +73,6 @@ if [ -f '/Users/mike/google-cloud-sdk/path.zsh.inc' ]; then source '/Users/mike/
 # The next line enables shell command completion for gcloud.
 if [ -f '/Users/mike/google-cloud-sdk/completion.zsh.inc' ]; then source '/Users/mike/google-cloud-sdk/completion.zsh.inc'; fi
 
-# gpg agent stuff
-export GPG_TTY=`tty`
-
-if [ -f ~/.gnupg/.gpg-agent-info ] && [ -n "$(pgrep gpg-agent)" ]; then
-    source ~/.gnupg/.gpg-agent-info
-    export GPG_AGENT_INFO
-else
-    eval $(gpg-agent --daemon --write-env-file ~/.gnupg/.gpg-agent-info)
-fi
-
-export PATH="/usr/local/opt/gpg-agent/bin:$PATH"
-
 # ---------------------------
 # fzf
 # ---------------------------
@@ -209,5 +197,24 @@ function grip() {
     docker run -it -p 10000:10000 -v $(pwd):/data -v ~/.grip:/.grip mbentley/grip $@ 0.0.0.0:10000
 }
 
-# Add secret ENV Vars
-if [ -f '/Users/mike/.myenv' ]; then source '/Users/mike/.myenv'; fi
+# ENV specific overrides
+if [ -f '~/.myenv' ]; then source '~/.myenv'; fi
+
+# GO PATH
+export GOPATH=$(go env GOPATH)
+export PATH=$PATH:$(go env GOPATH)/bin
+
+# linkerd2
+export PATH=$PATH:$HOME/.linkerd2/bin
+
+# ruby
+export PATH=/usr/local/opt/ruby/bin:$PATH
+
+# Alias
+alias watch='watch '
+alias k='kubectl'
+alias kns='kubens'
+
+# gpg agent
+source ~/.gpg-profile
+if [ -f '~/.gpg-profile' ]; then source '~/.gpg-profile'; fi
