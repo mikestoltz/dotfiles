@@ -33,6 +33,9 @@ Plug 'tpope/vim-sleuth'                       " Auto shiftwidth and expandtab ba
 Plug 'vim-airline/vim-airline'                " Status / tabline
 Plug 'vim-airline/vim-airline-themes'         " Themes for airline
 Plug 'ekalinin/Dockerfile.vim'                " Syntax for Dockerfiles
+Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' } " go dev
+Plug 'moll/vim-node'                          " Node dev
+Plug 'leafgarland/typescript-vim'             " typescript syntax highlighting
 
 call plug#end()
 
@@ -93,6 +96,8 @@ endif
 
 " Set JavaScript Template file syntax highlighting to HTML format
 au BufNewFile,BufRead *.ejs set filetype=html
+" Set tsx file formatting to typescript
+au BufNewFile,BufRead *.tsx set filetype=typescript
 " custom formatting for proto files
 autocmd FileType proto setlocal shiftwidth=2 tabstop=2
 " Show matching brackets
@@ -107,3 +112,32 @@ set novisualbell
 set background=dark
 set t_vb=
 set tm=500
+
+" tagbar stuff
+let g:tagbar_type_go = {
+    \ 'ctagstype' : 'go',
+    \ 'kinds'     : [
+        \ 'p:package',
+        \ 'i:imports:1',
+        \ 'c:constants',
+        \ 'v:variables',
+        \ 't:types',
+        \ 'n:interfaces',
+        \ 'w:fields',
+        \ 'e:embedded',
+        \ 'm:methods',
+        \ 'r:constructor',
+        \ 'f:functions'
+    \ ],
+    \ 'sro' : '.',
+    \ 'kind2scope' : {
+        \ 't' : 'ctype',
+        \ 'n' : 'ntype'
+    \ },
+    \ 'scope2kind' : {
+        \ 'ctype' : 't',
+        \ 'ntype' : 'n'
+    \ },
+    \ 'ctagsbin'  : 'gotags',
+    \ 'ctagsargs' : '-sort -silent'
+    \ }

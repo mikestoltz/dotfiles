@@ -36,11 +36,6 @@ autoload -U colors && colors
 export EDITOR='vim'
 export VISUAL='vim'
 
-# start tmux
-if [[ ! $TERM =~ screen ]]; then
-    tmux attach -t 0 || tmux
-fi
-
 # add yarn executable to path
 export PATH="$HOME/.yarn/bin:$PATH"
 
@@ -90,6 +85,7 @@ export FZF_TMUX_HEIGHT=50%
 
 CURRENT_BG='NONE'
 PRIMARY_FG=black
+DIR_BG=white
 
 # Characters
 SEGMENT_SEPARATOR="\ue0b0"
@@ -139,7 +135,7 @@ prompt_git() {
   ref="$vcs_info_msg_0_"
   if [[ -n "$ref" ]]; then
     # set dir to just current dir
-    prompt_segment blue $PRIMARY_FG " $(basename $(pwd))"
+    prompt_segment $DIR_BG $PRIMARY_FG " $(basename $(pwd))"
 
     if is_dirty; then
       color=yellow
@@ -159,7 +155,7 @@ prompt_git() {
     print -Pn " $ref"
   else
     # set dir to whole path
-    prompt_segment blue $PRIMARY_FG ' %~ '
+    prompt_segment $DIR_BG $PRIMARY_FG ' %~ '
   fi
 }
 
@@ -198,12 +194,13 @@ function grip() {
 }
 
 # ENV specific overrides
-if [ -f '~/.myenv' ]; then source '~/.myenv'; fi
+if [ -f "/home/$USER/.myenv" ]; then source "/home/$USER/.myenv"; fi
 
 # GO PATH
 export GOPATH="$HOME/go"
 export GOBIN="$GOPATH/bin"
 export PATH="$PATH:$GOBIN"
+export PATH=$PATH:/usr/local/go/bin
 
 # linkerd2
 export PATH=$PATH:$HOME/.linkerd2/bin
@@ -218,3 +215,18 @@ alias kns='kubens'
 
 # gpg agent
 if [ -f '~/.gpg-profile' ]; then source '~/.gpg-profile'; fi
+
+# custom fzf functions
+_fzf_complete_docker() {
+  read -A args <<< "$1"
+  case ${args[2]} in
+    kill)
+      _fzf_complete "--header-lines=1 --reverse --multi" "$@" < <(docker ps)
+      ;;
+    *)
+      ;;
+  esac
+}
+_fzf_complete_docker_post() {
+  cut -d ' ' -f1
+}
